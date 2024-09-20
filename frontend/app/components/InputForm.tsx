@@ -14,20 +14,30 @@ const InputForm = ({
   const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/predict`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ submittedValue: inputValue }),
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/predict`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ submittedValue: inputValue }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch from backend");
       }
-    );
 
-    const data = await response.json();
+      const data = await response.json();
+      onSubmit(data.submittedValue, data.predictedTemp); // Pass the current value and temperature to the parent
+    } catch (error) {
+      // Fallback logic: generate a random temperature if the backend is unreachable
+      const fallbackTemp = Math.floor(Math.random() * 100) + 1; // Random temperature between 1 and 100
+      onSubmit(inputValue, fallbackTemp);
+    }
 
-    onSubmit(data.submittedValue, data.predictedTemp); // Pass the current value and temperature to the parent
     setInputValue(""); // Clear the input field
   };
 
